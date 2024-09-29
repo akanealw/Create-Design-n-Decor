@@ -41,9 +41,13 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
     protected int radius;
     protected int length;
     protected Direction.Axis axis;
+    protected int checkTickRate;
+    protected int checkTickCounter;
 
     public ColoredStorageContainerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+
+        setCheckTickRate(4);
 
         inventory = new ItemStackHandler(AllConfigs.server().logistics.vaultCapacity.get()) {
             @Override
@@ -56,6 +60,12 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
         itemCapability = LazyOptional.empty();
         radius = 1;
         length = 1;
+    }
+
+    @Override
+    public void initialize() {
+        super.initialize();
+        repairContainer();
     }
 
     @Override
@@ -87,14 +97,42 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
             }
         }
     }
+    
+    public void updateCheck() {
+        if (getControllerBE() == null)
+            return;
+        if (getControllerBE().getBlockState().getValue(COLOR) != getBlockState().getValue(COLOR)) {
+            updateColors();
+        }
+    }
+    public void repairContainer() {
+        if (getControllerBE() == null)
+            return;
+        if (getControllerBE().getBlockState().getValue(COLOR) != getBlockState().getValue(COLOR)) {
+            Objects.requireNonNull(getLevel()).setBlockAndUpdate(getBlockPos(), getBlockState().setValue(COLOR, getControllerBE().getBlockState().getValue(COLOR)));
+        }
+    }
+
+    @Override
+    public void lazyTick() {
+        super.lazyTick();
+        if (checkTickCounter <= 0) {
+            checkTickCounter = checkTickRate;
+            repairContainer();
+        } else {
+            updateCheck();
+        }
+    }
+
+    public void setCheckTickRate(int slowTickRate) {
+        this.lazyTickRate = slowTickRate;
+        this.lazyTickCounter = slowTickRate;
+    }
 
     @SuppressWarnings("all")
     @Override
     public void tick() {
         super.tick();
-
-        if (getController() == worldPosition)
-            updateColors();
 
         if (lastKnownPos == null)
             lastKnownPos = getBlockPos();
@@ -102,6 +140,7 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
             onPositionChanged();
             return;
         }
+
 
         if (updateConnectivity)
             updateConnectivity();
@@ -129,8 +168,8 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
         if (isController())
             return this;
         BlockEntity blockEntity = Objects.requireNonNull(getLevel()).getBlockEntity(controller);
-        if (blockEntity instanceof ColoredStorageContainerBlockEntity)
-            return (ColoredStorageContainerBlockEntity) blockEntity;
+        if (blockEntity instanceof ColoredStorageContainerBlockEntity be)
+            return be;
         return null;
     }
 
@@ -171,13 +210,25 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
     }
 
     public void updateColors() {
-        for (int y = 0; y < getControllerBE().radius; y++) {
-            for (int z = 0; z < (getControllerBE().axis == Direction.Axis.X ? getControllerBE().radius : getControllerBE().length); z++) {
-                for (int x = 0; x < (getControllerBE().axis == Direction.Axis.Z ? getControllerBE().radius : getControllerBE().length); x++) {
-                    BlockPos pos = getControllerBE().getBlockPos().offset(x, y, z);
-                    BlockState stateAtPos = Objects.requireNonNull(getLevel()).getBlockState(pos);
+        Objects.requireNonNull(getLevel()).setBlockAndUpdate(getControllerBE().getBlockPos(), getControllerBE().getBlockState().setValue(COLOR, getMostColor()));
+        if (isController()) {
+            CompoundTag compound = getUpdateTag();
+            int radius = compound.getInt("Size");
+            int length = compound.getInt("Length");
+            for (int y = 0; y < radius; y++) {
+                for (int z = 0; z < (getControllerBE().axis == Direction.Axis.X ? radius : length); z++) {
+                    for (int x = 0; x < (getControllerBE().axis == Direction.Axis.Z ? radius : length); x++) {
+                        BlockPos pos = getControllerBE().getBlockPos().offset(x, y, z);
+                        BlockState stateAtPos = Objects.requireNonNull(getLevel()).getBlockState(pos);
+                        if (getLevel().getBlockEntity(pos) instanceof ColoredStorageContainerBlockEntity be && getController() != be.getController())
+                            continue;
+                        if (stateAtPos.isAir())
+                            continue;
+                        if (!stateAtPos.hasProperty(COLOR))
+                            continue;
+                        if (getMostColor() == null)
+                            continue;
 
-                    if (stateAtPos.hasProperty(COLOR) && getMostColor() != null) {
                         getLevel().setBlockAndUpdate(pos, stateAtPos.setValue(COLOR, getMostColor()));
                     }
                 }
@@ -188,13 +239,25 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
     public ColorHelper.DefaultColorEnumProvider getMostColor() {
         Map<ColorHelper.DefaultColorEnumProvider, Integer> colorCountMap = new HashMap<>();
 
-        for (int y = 0; y < getControllerBE().radius; y++) {
-            for (int z = 0; z < (getControllerBE().axis == Direction.Axis.X ? getControllerBE().radius : getControllerBE().length); z++) {
-                for (int x = 0; x < (getControllerBE().axis == Direction.Axis.Z ? getControllerBE().radius : getControllerBE().length); x++) {
-                    BlockPos pos = getControllerBE().getBlockPos().offset(x, y, z);
-                    BlockState stateAtPos = Objects.requireNonNull(getLevel()).getBlockState(pos);
+        ColorHelper.DefaultColorEnumProvider colorController = getControllerBE().getBlockState().getValue(COLOR);
+        colorCountMap.put(colorController, colorCountMap.getOrDefault(colorController, 0) + 1);
 
-                    if (stateAtPos.hasProperty(COLOR)) {
+        if (isController()) {
+            CompoundTag compound = getUpdateTag();
+            int radius = compound.getInt("Size");
+            int length = compound.getInt("Length");
+
+            for (int y = 0; y < radius; y++) {
+                for (int z = 0; z < (getControllerBE().axis == Direction.Axis.X ? radius : length); z++) {
+                    for (int x = 0; x < (getControllerBE().axis == Direction.Axis.Z ? radius : length); x++) {
+                        BlockPos pos = getControllerBE().getBlockPos().offset(x, y, z);
+                        BlockState stateAtPos = Objects.requireNonNull(getLevel()).getBlockState(pos);
+                        if (getLevel().getBlockEntity(pos) instanceof ColoredStorageContainerBlockEntity be && getController() != be.getController())
+                            continue;
+                        if (stateAtPos.isAir())
+                            continue;
+                        if (!stateAtPos.hasProperty(COLOR))
+                            continue;
                         ColorHelper.DefaultColorEnumProvider color = stateAtPos.getValue(COLOR);
 
                         colorCountMap.put(color, colorCountMap.getOrDefault(color, 0) + 1);

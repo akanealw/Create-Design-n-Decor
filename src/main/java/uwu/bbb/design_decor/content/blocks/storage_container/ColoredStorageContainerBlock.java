@@ -4,9 +4,9 @@ import com.simibubi.create.api.connectivity.ConnectivityHandler;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.item.ItemHelper;
-import com.simibubi.create.foundation.utility.BlockHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -36,6 +36,9 @@ import uwu.bbb.design_decor.registry.helper.decor.ColorHelper;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static uwu.bbb.design_decor.registry.helper.decor.ColorHelper.DefaultColorEnumProvider.*;
 
@@ -67,57 +70,51 @@ public class ColoredStorageContainerBlock extends Block implements IWrenchable, 
         return super.use(pState, pLevel, pPos, pPlayer, pHand, pHit);
     }
 
-    public boolean applyDye(BlockState pState, Level pLevel, BlockPos pPos, @Nullable ColorHelper.DefaultColorEnumProvider pColor, Player pPlayer, ItemStack pStack) {
-        assert pColor != null;
+    public boolean applyDye(BlockState pState, Level pLevel, BlockPos pPos, @Nullable ColorHelper.DefaultColorEnumProvider pDyeColor, Player pPlayer, ItemStack pDyeStack) {
+        assert pDyeColor != null;
+        if (!(pState.hasProperty(COLOR) && !pDyeStack.isEmpty() && pLevel.getBlockEntity(pPos) instanceof ColoredStorageContainerBlockEntity be))
+            return false;
 
-        // Check if the block at the position is an instance of ColoredStorageContainerBlock and supports the COLOR property
-        if (!(pState.getBlock() instanceof ColoredStorageContainerBlock) || !pState.hasProperty(COLOR)) {
-            return false; // Prevent modifying blocks that don't support COLOR
-        }
+        ColoredStorageContainerBlockEntity controllerBE = be.getControllerBE();
+        if (controllerBE == null)
+            return false;
 
-        // Apply the color to the block's state
-        BlockState newState = pState.setValue(COLOR, pColor);
-        newState = BlockHelper.copyProperties(pState, newState);
+        BlockState blockState = pLevel.getBlockState(controllerBE.getBlockPos());
+        BlockState newState = blockState.setValue(COLOR, pDyeColor);
 
-        // Check if the color is already applied
-        if (pState.getValue(COLOR) == newState.getValue(COLOR)) {
-            if (pLevel.getBlockEntity(pPos) instanceof ColoredStorageContainerBlockEntity be) {
-                ColoredStorageContainerBlockEntity controllerBE = be.getControllerBE();
-                if (controllerBE != null) {
-                    BlockState blockState = pLevel.getBlockState(controllerBE.getBlockPos());
-                    if (blockState.getBlock() instanceof ColoredStorageContainerBlock && !pStack.isEmpty() && blockState.getValue(COLOR) != pColor) {
-
-                        pLevel.setBlockAndUpdate(controllerBE.getBlockPos(), newState);
-
-                        // Apply color to all blocks within the container's radius
-                        for (int y = 0; y < controllerBE.radius; y++) {
-                            for (int z = 0; z < (controllerBE.axis == Direction.Axis.X ? controllerBE.radius : controllerBE.length); z++) {
-                                for (int x = 0; x < (controllerBE.axis == Direction.Axis.Z ? controllerBE.radius : controllerBE.length); x++) {
-                                    BlockPos pos = controllerBE.getBlockPos().offset(x, y, z);
-                                    BlockState stateAtPos = pLevel.getBlockState(pos);
-                                    if (stateAtPos.hasProperty(COLOR)) {
-                                        pLevel.setBlockAndUpdate(pos, stateAtPos.setValue(COLOR, pColor));
-                                    }
-                                }
-                            }
+        if (blockState.getValue(COLOR) != newState.getValue(COLOR)) {
+            List<BlockPos> positions = new ArrayList<>();
+            if (be.isController()) {
+                CompoundTag compound = be.getUpdateTag();
+                int radius = compound.getInt("Size");
+                int length = compound.getInt("Length");
+                for (int y = 0; y < radius; y++) {
+                    for (int z = 0; z < (controllerBE.axis == Direction.Axis.X ? radius : length); z++) {
+                        for (int x = 0; x < (controllerBE.axis == Direction.Axis.Z ? radius : length); x++) {
+                            BlockPos pos = controllerBE.getBlockPos().offset(x, y, z);
+                            BlockState stateAtPos = pLevel.getBlockState(pos);
+                            if (pLevel.getBlockEntity(pos) instanceof ColoredStorageContainerBlockEntity be2 && be.getController() != be2.getController())
+                                continue;
+                            if (stateAtPos.isAir())
+                                continue;
+                            if (!stateAtPos.hasProperty(COLOR))
+                                continue;
+                            positions.add(pos);
                         }
-
-                        if (!pPlayer.isCreative())
-                            pStack.shrink(1);
-                        return true;
                     }
                 }
             }
-        } else {
-            // Apply the new color state to the block
-            pLevel.setBlockAndUpdate(pPos, newState);
-            if (!pPlayer.isCreative()) {
-                pStack.shrink(1);
-            }
-            return true;
-        }
 
-        return false;
+            pLevel.setBlockAndUpdate(controllerBE.getBlockPos(), controllerBE.getBlockState().setValue(COLOR, pDyeColor));
+            for (BlockPos pos : positions) {
+                pLevel.setBlockAndUpdate(pos, pLevel.getBlockState(pos).setValue(COLOR, pDyeColor));
+            }
+            if (!pPlayer.isCreative())
+                pDyeStack.shrink(1);
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
