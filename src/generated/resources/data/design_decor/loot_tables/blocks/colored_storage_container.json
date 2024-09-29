@@ -11,7 +11,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "design_decor:red_storage_container"
+          "name": "design_decor:storage_container"
         }
       ],
       "rolls": 1.0

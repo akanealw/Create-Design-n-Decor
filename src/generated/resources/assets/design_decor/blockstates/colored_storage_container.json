@@ -32,14 +32,6 @@
       "model": "design_decor:block/storage_containers/cyan",
       "y": 90
     },
-    "axis=x,colors=default,large=false": {
-      "model": "design_decor:block/storage_containers/default",
-      "y": 90
-    },
-    "axis=x,colors=default,large=true": {
-      "model": "design_decor:block/storage_containers/default",
-      "y": 90
-    },
     "axis=x,colors=gray,large=false": {
       "model": "design_decor:block/storage_containers/gray",
       "y": 90
@@ -159,12 +151,6 @@
     },
     "axis=z,colors=cyan,large=true": {
       "model": "design_decor:block/storage_containers/cyan"
-    },
-    "axis=z,colors=default,large=false": {
-      "model": "design_decor:block/storage_containers/default"
-    },
-    "axis=z,colors=default,large=true": {
-      "model": "design_decor:block/storage_containers/default"
     },
     "axis=z,colors=gray,large=false": {
       "model": "design_decor:block/storage_containers/gray"

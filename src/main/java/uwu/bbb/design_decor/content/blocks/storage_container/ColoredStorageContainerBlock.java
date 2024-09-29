@@ -18,10 +18,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -51,61 +48,80 @@ public class ColoredStorageContainerBlock extends Block implements IWrenchable, 
 
     public ColoredStorageContainerBlock(Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(LARGE, false).setValue(COLOR, BLUE));
+        registerDefaultState(defaultBlockState().setValue(LARGE, false).setValue(COLOR, WHITE));
     }
 
     @ParametersAreNonnullByDefault
     @Override
     public @NotNull InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        if (!pLevel.isClientSide()) {
-            ItemStack heldItem = pPlayer.getItemInHand(pHand);
-
-            for (ColorHelper color : ColorHelper.DefaultColorProvider.COLORS) {
-                if (color.colorItem != null && heldItem.getItem() == color.colorItem) {
-                    if (applyDye(pState, pLevel, pPos, color, pPlayer, heldItem)) {
-                        pLevel.playSound(null, pPos, SoundEvents.DYE_USE, SoundSource.BLOCKS, 1.0f, 1.1f - pLevel.random.nextFloat() * .2f);
-                        return InteractionResult.SUCCESS;
-                    }
+        ItemStack heldItem = pPlayer.getItemInHand(pHand);
+        for (ColorHelper color : ColorHelper.DefaultColorProvider.COLORS) {
+            if (color.colorItem != null && heldItem.getItem() == color.colorItem) {
+                if (applyDye(pState, pLevel, pPos, ColorHelper.getSelectedColor(color), pPlayer, heldItem)) {
+                    pLevel.playSound(null, pPos, SoundEvents.DYE_USE, SoundSource.BLOCKS, 1.0f, 1.1f - pLevel.random.nextFloat() * .2f);
+                    return InteractionResult.SUCCESS;
                 }
             }
         }
+
         return super.use(pState, pLevel, pPos, pPlayer, pHand, pHit);
     }
 
-    public boolean applyDye(BlockState pState, Level pLevel, BlockPos pPos, @Nullable ColorHelper pColor, Player pPlayer, ItemStack pStack) {
-        BlockState newState = pState.setValue(COLOR, ColorHelper.getSelectedColor(pColor));
+    public boolean applyDye(BlockState pState, Level pLevel, BlockPos pPos, @Nullable ColorHelper.DefaultColorEnumProvider pColor, Player pPlayer, ItemStack pStack) {
+        assert pColor != null;
+
+        // Check if the block at the position is an instance of ColoredStorageContainerBlock and supports the COLOR property
+        if (!(pState.getBlock() instanceof ColoredStorageContainerBlock) || !pState.hasProperty(COLOR)) {
+            return false; // Prevent modifying blocks that don't support COLOR
+        }
+
+        // Apply the color to the block's state
+        BlockState newState = pState.setValue(COLOR, pColor);
         newState = BlockHelper.copyProperties(pState, newState);
+
+        // Check if the color is already applied
         if (pState.getValue(COLOR) == newState.getValue(COLOR)) {
             if (pLevel.getBlockEntity(pPos) instanceof ColoredStorageContainerBlockEntity be) {
                 ColoredStorageContainerBlockEntity controllerBE = be.getControllerBE();
                 if (controllerBE != null) {
-                    boolean dyed = false;
-                    for (int x = 0; x < controllerBE.getWidth(); x++) {
-                        for (int z = 0; z < controllerBE.getWidth(); z++) {
-                            BlockPos offsetPos = pState.getValue(HORIZONTAL_AXIS) == Direction.Axis.X ? new BlockPos(pPos.getX(), be.getController().getY()+x, be.getController().getZ()+z)
-                                    : new BlockPos(be.getController().getX()+x, be.getController().getY()+z, pPos.getZ());
-                            BlockState blockState = pLevel.getBlockState(offsetPos);
-                            if(blockState.getBlock() instanceof ColoredStorageContainerBlock && !pStack.isEmpty()) {
-                                if (blockState.getValue(COLOR).get().equals(pColor))
-                                    continue;
-                                if (!pPlayer.isCreative())
-                                    pStack.shrink(1);
-                                pLevel.setBlockAndUpdate(pPos, newState);
-                                dyed = true;
+                    BlockState blockState = pLevel.getBlockState(controllerBE.getBlockPos());
+                    if (blockState.getBlock() instanceof ColoredStorageContainerBlock && !pStack.isEmpty() && blockState.getValue(COLOR) != pColor) {
+
+                        pLevel.setBlockAndUpdate(controllerBE.getBlockPos(), newState);
+
+                        // Apply color to all blocks within the container's radius
+                        for (int y = 0; y < controllerBE.radius; y++) {
+                            for (int z = 0; z < (controllerBE.axis == Direction.Axis.X ? controllerBE.radius : controllerBE.length); z++) {
+                                for (int x = 0; x < (controllerBE.axis == Direction.Axis.Z ? controllerBE.radius : controllerBE.length); x++) {
+                                    BlockPos pos = controllerBE.getBlockPos().offset(x, y, z);
+                                    BlockState stateAtPos = pLevel.getBlockState(pos);
+                                    if (stateAtPos.hasProperty(COLOR)) {
+                                        pLevel.setBlockAndUpdate(pos, stateAtPos.setValue(COLOR, pColor));
+                                    }
+                                }
                             }
                         }
+
+                        if (!pPlayer.isCreative())
+                            pStack.shrink(1);
+                        return true;
                     }
-                    return dyed;
                 }
             }
         } else {
-            if(!pPlayer.isCreative())
-                pStack.shrink(1);
+            // Apply the new color state to the block
             pLevel.setBlockAndUpdate(pPos, newState);
+            if (!pPlayer.isCreative()) {
+                pStack.shrink(1);
+            }
             return true;
         }
+
         return false;
     }
+
+
+
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {

@@ -25,7 +25,7 @@ import uwu.bbb.design_decor.registry.DecorBlocks;
 import uwu.bbb.design_decor.registry.DecorCreativeModeTabs;
 import uwu.bbb.design_decor.registry.client.DecorPartialModels;
 import uwu.bbb.design_decor.registry.client.DecorSpriteShifts;
-import uwu.bbb.design_decor.registry.helper.DecorBlockItems;
+import uwu.bbb.design_decor.registry.DecorBlockItems;
 import uwu.bbb.design_decor.registry.helper.decor.ColorHelper;
 
 import static uwu.bbb.design_decor.Decor.MOD_ID;

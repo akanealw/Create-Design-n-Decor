@@ -26,9 +26,9 @@ import static uwu.bbb.design_decor.content.blocks.storage_container.ColoredStora
 
 public class ColoredStorageContainerItem extends BlockItem {
 
-    private final ColorHelper color;
+    private final ColorHelper.DefaultColorEnumProvider color;
 
-    public ColoredStorageContainerItem(Properties properties, ColorHelper color) {
+    public ColoredStorageContainerItem(Properties properties, ColorHelper.DefaultColorEnumProvider color) {
         super(DecorBlocks.COLORED_STORAGE_CONTAINER.get(), properties);
         this.color = color;
     }
@@ -36,7 +36,9 @@ public class ColoredStorageContainerItem extends BlockItem {
     @Nullable
     @Override
     protected BlockState getPlacementState(@NotNull BlockPlaceContext pContext) {
-        return Objects.requireNonNull(super.getPlacementState(pContext)).setValue(COLOR, ColorHelper.getSelectedColor(color));
+        if (super.getPlacementState(pContext) == null)
+            return super.getPlacementState(pContext);
+        return Objects.requireNonNull(super.getPlacementState(pContext)).setValue(COLOR, color);
     }
 
     @Override

@@ -50,7 +50,7 @@ public class DecorBlocks {
                             .texture("3", path3)
                             .texture("particle", path3);
 
-                    p.models().withExistingParent("item/storage_containers/" + color.get().colorId, refModelItem)
+                    p.models().withExistingParent("item/" + color.get().colorId + "_storage_container", refModelItem)
                             .parent(model);
 
                     return ConfiguredModel.builder()

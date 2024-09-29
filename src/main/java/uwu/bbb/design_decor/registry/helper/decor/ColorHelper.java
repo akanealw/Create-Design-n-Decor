@@ -42,24 +42,7 @@ public class ColorHelper {
         public static ColorHelper RED = create(1, "Red", Items.RED_DYE, MaterialColor.COLOR_RED, DyeColor.RED);
         public static ColorHelper BLACK = create(15, "Black", Items.BLACK_DYE, MaterialColor.COLOR_BLACK, DyeColor.BLACK);
 
-        public static final ColorHelper[] COLORS = new ColorHelper[]{
-                WHITE,
-                ORANGE,
-                MAGENTA,
-                LIGHT_BLUE,
-                YELLOW,
-                LIME,
-                PINK,
-                GRAY,
-                LIGHT_GRAY,
-                CYAN,
-                PURPLE,
-                BLUE,
-                BROWN,
-                GREEN,
-                RED,
-                BLACK
-        };
+        public static final ColorHelper[] COLORS = new ColorHelper[]{WHITE, ORANGE, MAGENTA, LIGHT_BLUE, YELLOW, LIME, PINK, GRAY, LIGHT_GRAY, CYAN, PURPLE, BLUE, BROWN, GREEN, RED, BLACK};
 
         public static void register() {}
     }
@@ -81,8 +64,7 @@ public class ColorHelper {
         BROWN(0, "Brown", Items.BROWN_DYE, MaterialColor.COLOR_BROWN, DyeColor.BROWN),
         GREEN(5, "Green", Items.GREEN_DYE, MaterialColor.COLOR_GREEN, DyeColor.GREEN),
         RED(1, "Red", Items.RED_DYE, MaterialColor.COLOR_RED, DyeColor.RED),
-        BLACK(15, "Black", Items.BLACK_DYE, MaterialColor.COLOR_BLACK, DyeColor.BLACK),
-        DEFAULT(8, "Default", null, null, null);
+        BLACK(15, "Black", Items.BLACK_DYE, MaterialColor.COLOR_BLACK, DyeColor.BLACK);
 
         private final int digitId;
         private final Item colorItem;

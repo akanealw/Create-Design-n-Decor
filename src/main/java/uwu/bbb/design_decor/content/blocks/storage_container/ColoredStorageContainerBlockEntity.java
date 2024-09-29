@@ -23,9 +23,11 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import org.jetbrains.annotations.NotNull;
 import uwu.bbb.design_decor.registry.DecorBlockEntities;
+import uwu.bbb.design_decor.registry.helper.decor.ColorHelper;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+
+import static uwu.bbb.design_decor.content.blocks.storage_container.ColoredStorageContainerBlock.COLOR;
 
 @SuppressWarnings("unchecked")
 public class ColoredStorageContainerBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Inventory {
@@ -66,6 +68,7 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
         if (!isController())
             return;
         ConnectivityHandler.formMulti(this);
+        updateColors();
     }
 
     protected void updateComparators() {
@@ -89,6 +92,9 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
     @Override
     public void tick() {
         super.tick();
+
+        if (getController() == worldPosition)
+            updateColors();
 
         if (lastKnownPos == null)
             lastKnownPos = getBlockPos();
@@ -163,6 +169,47 @@ public class ColoredStorageContainerBlockEntity extends SmartBlockEntity impleme
     public BlockPos getController() {
         return isController() ? worldPosition : controller;
     }
+
+    public void updateColors() {
+        for (int y = 0; y < getControllerBE().radius; y++) {
+            for (int z = 0; z < (getControllerBE().axis == Direction.Axis.X ? getControllerBE().radius : getControllerBE().length); z++) {
+                for (int x = 0; x < (getControllerBE().axis == Direction.Axis.Z ? getControllerBE().radius : getControllerBE().length); x++) {
+                    BlockPos pos = getControllerBE().getBlockPos().offset(x, y, z);
+                    BlockState stateAtPos = Objects.requireNonNull(getLevel()).getBlockState(pos);
+
+                    if (stateAtPos.hasProperty(COLOR) && getMostColor() != null) {
+                        getLevel().setBlockAndUpdate(pos, stateAtPos.setValue(COLOR, getMostColor()));
+                    }
+                }
+            }
+        }
+    }
+
+    public ColorHelper.DefaultColorEnumProvider getMostColor() {
+        Map<ColorHelper.DefaultColorEnumProvider, Integer> colorCountMap = new HashMap<>();
+
+        for (int y = 0; y < getControllerBE().radius; y++) {
+            for (int z = 0; z < (getControllerBE().axis == Direction.Axis.X ? getControllerBE().radius : getControllerBE().length); z++) {
+                for (int x = 0; x < (getControllerBE().axis == Direction.Axis.Z ? getControllerBE().radius : getControllerBE().length); x++) {
+                    BlockPos pos = getControllerBE().getBlockPos().offset(x, y, z);
+                    BlockState stateAtPos = Objects.requireNonNull(getLevel()).getBlockState(pos);
+
+                    if (stateAtPos.hasProperty(COLOR)) {
+                        ColorHelper.DefaultColorEnumProvider color = stateAtPos.getValue(COLOR);
+
+                        colorCountMap.put(color, colorCountMap.getOrDefault(color, 0) + 1);
+                    }
+                }
+            }
+        }
+
+        return colorCountMap.entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
+
 
     @Override
     protected void read(CompoundTag compound, boolean clientPacket) {
