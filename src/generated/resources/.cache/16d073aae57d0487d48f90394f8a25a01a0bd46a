@@ -1,7 +1,10 @@
-// 1.19.2	2024-09-28T17:16:24.3038875	Registrate Provider for design_decor [Recipes, Advancements, Loot tables, Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), Blockstates, Item models, Lang (en_us/en_ud)]
+// 1.19.2	2024-09-29T23:20:01.5420558	Registrate Provider for design_decor [Recipes, Advancements, Loot tables, Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), Blockstates, Item models, Lang (en_us/en_ud)]
 a7c1020c156d1d592725a58ec579f71713ae58a2 assets/design_decor/blockstates/colored_storage_container.json
-1af3c3464d086e454a4a969ad21ab4c8c8102509 assets/design_decor/lang/en_ud.json
-03fb112803e97de4c9bc4f35ed42ade6a7b4a347 assets/design_decor/lang/en_us.json
+f3a2a0c21e25549d1d19fe8c4dfd4631846de3d6 assets/design_decor/blockstates/large_metal_girder.json
+d4d87ed43aa94d294c9061cbd69c15be421e8994 assets/design_decor/lang/en_ud.json
+01e20a35ab3e9670f0ee51eb856427d4784698de assets/design_decor/lang/en_us.json
+fd27428c869fdb9b9c1a7e4b9b9d06dbeb26cd31 assets/design_decor/models/block/large_metal_girder.json
+423c9ae21f3e91cf0c1ed0500ac6a3619849ca92 assets/design_decor/models/block/large_metal_girder_horizontal.json
 5b8f86c30b3e6d298ce4d58e0ea6215066b6eb2d assets/design_decor/models/block/storage_containers/black.json
 253a3aec5773587f48a7daf64553b2df2450c05d assets/design_decor/models/block/storage_containers/blue.json
 02ad00d94adbb9da85e9bcf00c5f77f0b4860052 assets/design_decor/models/block/storage_containers/brown.json
@@ -24,6 +27,7 @@ c1371088446c773dbf745139a88d7a6b3f7504fd assets/design_decor/models/item/brown_s
 a286676ce07905ddd01c943320ec63a302f3a3d5 assets/design_decor/models/item/cyan_storage_container.json
 5d4e6113f4c5e0753aa7da5722c7c2fa8d96f381 assets/design_decor/models/item/gray_storage_container.json
 5cfd2943bb1dba3591ceaba36545113e4da10155 assets/design_decor/models/item/green_storage_container.json
+8c6824085236887ead03bb7805f26280605dd3e8 assets/design_decor/models/item/large_metal_girder.json
 ff215bb075f3958d25601b226dcbfbb743ba7ace assets/design_decor/models/item/light_blue_storage_container.json
 223d457a594b31a03ee97e74dd9f243df8090b34 assets/design_decor/models/item/light_gray_storage_container.json
 373b53211a653d6a991679bc6c10f2535d41bc55 assets/design_decor/models/item/lime_storage_container.json
@@ -32,7 +36,9 @@ be0d93ac4d206f3d6aadd8e75406ea94180c24d9 assets/design_decor/models/item/orange_
 6464ec9d916b575fda6923e5c528357188555d86 assets/design_decor/models/item/pink_storage_container.json
 e292a0ff33d687eb6a5aace0283e492556f2c71b assets/design_decor/models/item/purple_storage_container.json
 81282539b777127d43b2cfc6f356cc99419df64f assets/design_decor/models/item/red_storage_container.json
+08fc88978c223b68a454c71ea753cff1f7701f50 assets/design_decor/models/item/storage_container.json
 7539704f01dc6ad76ceafbbf3b728285bb6b1151 assets/design_decor/models/item/white_storage_container.json
 e7d72ad2529b6a06a89caf3bc4443ce0cb637695 assets/design_decor/models/item/yellow_storage_container.json
 e25db4f309dce9b770be84653ff90053648e8eb3 data/design_decor/loot_tables/blocks/colored_storage_container.json
-3126b215cb72f8a63c336891870d2d0ac91e1002 data/minecraft/tags/blocks/mineable/pickaxe.json
+4abdd87ca07cec16cdd97e8d2f2173d7ef7079fd data/design_decor/loot_tables/blocks/large_metal_girder.json
+d46c69711168cf811ca26284fd7cb925e21dc8b1 data/minecraft/tags/blocks/mineable/pickaxe.json

@@ -10,13 +10,18 @@ import uwu.bbb.design_decor.registry.helper.decor.ColorHelper;
 
 import java.util.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "SameParameterValue"})
 public class DecorSpriteShifts {
 
     private static final Map<ColorHelper, Couple<CTSpriteShiftEntry>> COLORED_STORAGE_TOP = new HashMap<>();
     private static final Map<ColorHelper, Couple<CTSpriteShiftEntry>> COLORED_STORAGE_FRONT = new HashMap<>();
     private static final Map<ColorHelper, Couple<CTSpriteShiftEntry>> COLORED_STORAGE_SIDE = new HashMap<>();
     private static final Map<ColorHelper, Couple<CTSpriteShiftEntry>> COLORED_STORAGE_BOTTOM = new HashMap<>();
+
+    public static final CTSpriteShiftEntry
+            LARGE_GIRDER = rectangle("large_girder"),
+            LARGE_GIRDER_TOP = omni("large_girder_top");
+
 
     static {
         populateMaps();
